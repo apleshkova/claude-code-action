@@ -28,7 +28,10 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
-
+      - name: Project setup
+        run: |
+          npm run setup
+          npm run dev:daemon
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@main
@@ -39,6 +42,27 @@ jobs:
           anthropic_federation_rule_id: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
           anthropic_organization_id: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
           anthropic_service_account_id: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          custom_instructions: |
+            The project is already setup with all dependencies installed.
+            The server is already running at localhost:3000. Logs from it are being written to logs.txt. If you need 
+            you can query db with the 'sqlite3' cli. If needed use mcp_playwrite set of tools to launch a browser and interact with the app.
           claude_args: |
             --allowedTools "Bash(bun install),Bash(bun test:*),Bash(bun run format),Bash(bun typecheck)"
             --model "claude-opus-4-7"
+            
+            mcp_config: |
+            {
+          "mcpServers": {
+         "playwright": {
+        "command": "npx",
+        "args": [
+          "@playwright/mcp@latest",
+          "--allowed-origins",
+          "localhost:3000;cdn.tailwindcss.com;esm.sh"
+        ]
+      }
+    }
+  }
+
+  allowed_tools: "Bash(npm:*),Bash(sqlite3:*),mcp__playwright__browser_snapshot,mcp__playwright__browser_click,..."
+
